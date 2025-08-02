@@ -153,6 +153,25 @@ const Index = () => {
     );
   };
 
+  const updateWatchProgress = (seriesId: number, episode: number, season: number, progress: number) => {
+    setUserProfile(prev => ({
+      ...prev,
+      watchHistory: [
+        ...prev.watchHistory.filter(h => h.seriesId !== seriesId),
+        { seriesId, episodeNumber: episode, seasonNumber: season, watchedAt: new Date().toISOString().split('T')[0], progress }
+      ]
+    }));
+  };
+
+  const getRecommendedSeries = () => {
+    const userGenres = userProfile.preferences;
+    return series.filter(show => 
+      userGenres.includes(show.genre) && !userProfile.watchHistory.some(h => h.seriesId === show.id)
+    ).slice(0, 3);
+  };
+
+  const recommendedSeries = getRecommendedSeries();
+
   const renderStars = (rating: number) => {
     return (
       <div className="flex gap-1">
@@ -267,6 +286,49 @@ const Index = () => {
             </TabsList>
 
             <TabsContent value="all">
+              {/* Recommendations Section */}
+              {recommendedSeries.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-2xl font-bold mb-4 flex items-center">
+                    <Icon name="Sparkles" size={24} className="mr-2 text-primary" />
+                    Рекомендации для вас
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    {recommendedSeries.map(show => (
+                      <Card key={show.id} className="group hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-primary/5 to-secondary/5 border-primary/20 overflow-hidden hover:scale-105">
+                        <div className="relative">
+                          <img 
+                            src={show.image} 
+                            alt={show.title}
+                            className="w-full h-40 object-cover group-hover:scale-110 transition-transform duration-300"
+                          />
+                          <Badge className="absolute top-2 left-2 bg-gradient-to-r from-primary to-secondary text-white">
+                            <Icon name="Heart" size={12} className="mr-1" />
+                            Для вас
+                          </Badge>
+                        </div>
+                        <CardContent className="p-4">
+                          <h4 className="font-bold text-lg mb-2">{show.title}</h4>
+                          <div className="flex items-center gap-2 mb-2">
+                            {renderStars(show.rating)}
+                            <span className="text-sm font-semibold text-yellow-600">{show.rating}</span>
+                          </div>
+                          <Badge className="mb-2">{show.genre}</Badge>
+                          <Button 
+                            size="sm" 
+                            className="w-full bg-gradient-to-r from-primary to-secondary"
+                            onClick={() => updateWatchProgress(show.id, 1, 1, 0)}
+                          >
+                            <Icon name="Play" size={14} className="mr-2" />
+                            Начать просмотр
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  <Separator className="mb-8" />
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredSeries.map(show => (
                   <Card key={show.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/70 backdrop-blur-sm border-white/30 overflow-hidden hover:scale-105">
@@ -324,10 +386,32 @@ const Index = () => {
                       
                       <p className="text-gray-600 mb-4 line-clamp-2">{show.description}</p>
                       
+                      {/* Watch Progress */}
+                      {(() => {
+                        const watchProgress = userProfile.watchHistory.find(h => h.seriesId === show.id);
+                        return watchProgress ? (
+                          <div className="mb-4">
+                            <div className="flex items-center justify-between text-sm text-gray-600 mb-1">
+                              <span>Сезон {watchProgress.seasonNumber}, Эпизод {watchProgress.episodeNumber}</span>
+                              <span>{watchProgress.progress}%</span>
+                            </div>
+                            <Progress value={watchProgress.progress} className="h-2" />
+                          </div>
+                        ) : null;
+                      })()}
+                      
                       <div className="flex gap-2">
-                        <Button className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                        <Button 
+                          className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                          onClick={() => {
+                            const watchedEpisode = userProfile.watchHistory.find(h => h.seriesId === show.id);
+                            const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber + 1 : 1;
+                            const season = watchedEpisode ? watchedEpisode.seasonNumber : 1;
+                            updateWatchProgress(show.id, nextEpisode, season, Math.floor(Math.random() * 100));
+                          }}
+                        >
                           <Icon name="Play" size={16} className="mr-2" />
-                          Смотреть
+                          {userProfile.watchHistory.find(h => h.seriesId === show.id) ? 'Продолжить' : 'Смотреть'}
                         </Button>
                         <Dialog>
                           <DialogTrigger asChild>
@@ -384,9 +468,17 @@ const Index = () => {
                         <span className="text-lg font-semibold text-yellow-600">{show.rating}</span>
                       </div>
                       <p className="text-gray-600 mb-4">{show.description}</p>
-                      <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                        onClick={() => {
+                          const watchedEpisode = userProfile.watchHistory.find(h => h.seriesId === show.id);
+                          const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber + 1 : 1;
+                          const season = watchedEpisode ? watchedEpisode.seasonNumber : 1;
+                          updateWatchProgress(show.id, nextEpisode, season, Math.floor(Math.random() * 100));
+                        }}
+                      >
                         <Icon name="Play" size={16} className="mr-2" />
-                        Смотреть
+                        {userProfile.watchHistory.find(h => h.seriesId === show.id) ? 'Продолжить' : 'Смотреть'}
                       </Button>
                     </CardContent>
                   </Card>
@@ -416,9 +508,17 @@ const Index = () => {
                         <span className="text-lg font-semibold text-yellow-600">{show.rating}</span>
                       </div>
                       <p className="text-gray-600 mb-4">{show.description}</p>
-                      <Button className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                      <Button 
+                        className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                        onClick={() => {
+                          const watchedEpisode = userProfile.watchHistory.find(h => h.seriesId === show.id);
+                          const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber + 1 : 1;
+                          const season = watchedEpisode ? watchedEpisode.seasonNumber : 1;
+                          updateWatchProgress(show.id, nextEpisode, season, Math.floor(Math.random() * 100));
+                        }}
+                      >
                         <Icon name="Play" size={16} className="mr-2" />
-                        Смотреть
+                        {userProfile.watchHistory.find(h => h.seriesId === show.id) ? 'Продолжить' : 'Смотреть'}
                       </Button>
                     </CardContent>
                   </Card>
