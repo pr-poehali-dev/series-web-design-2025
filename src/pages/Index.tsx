@@ -54,12 +54,28 @@ interface UserProfile {
   preferences: string[];
 }
 
+interface Episode {
+  id: number;
+  number: number;
+  season: number;
+  title: string;
+  duration: string;
+  videoUrl: string;
+  thumbnail?: string;
+}
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('Все');
   const [favorites, setFavorites] = useState<number[]>([]);
   const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
   const [showProfile, setShowProfile] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
+  const [currentEpisode, setCurrentEpisode] = useState<Episode | null>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: 'Анна Петрова',
     email: 'anna@example.com',
@@ -161,6 +177,61 @@ const Index = () => {
         { seriesId, episodeNumber: episode, seasonNumber: season, watchedAt: new Date().toISOString().split('T')[0], progress }
       ]
     }));
+  };
+
+  const getEpisodes = (seriesId: number): Episode[] => {
+    const episodes: Episode[] = [];
+    const seriesData = series.find(s => s.id === seriesId);
+    if (!seriesData) return episodes;
+    
+    for (let season = 1; season <= (seriesData.seasons || 1); season++) {
+      for (let ep = 1; ep <= (seriesData.episodes || 10); ep++) {
+        episodes.push({
+          id: season * 100 + ep,
+          number: ep,
+          season: season,
+          title: `Эпизод ${ep}: ${season === 1 ? 'Начало истории' : season === 2 ? 'Развитие сюжета' : 'Финальная глава'}`,
+          duration: seriesData.duration || '45 мин',
+          videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          thumbnail: seriesData.image
+        });
+      }
+    }
+    return episodes;
+  };
+
+  const playEpisode = (seriesId: number, episodeNumber: number, seasonNumber: number) => {
+    const episodes = getEpisodes(seriesId);
+    const episode = episodes.find(ep => ep.number === episodeNumber && ep.season === seasonNumber);
+    if (episode) {
+      setCurrentEpisode(episode);
+      setSelectedSeries(series.find(s => s.id === seriesId) || null);
+      setShowPlayer(true);
+      setCurrentTime(0);
+      setIsPlaying(true);
+    }
+  };
+
+  const getNextEpisode = () => {
+    if (!currentEpisode || !selectedSeries) return null;
+    const episodes = getEpisodes(selectedSeries.id);
+    const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
+    return currentIndex < episodes.length - 1 ? episodes[currentIndex + 1] : null;
+  };
+
+  const getPreviousEpisode = () => {
+    if (!currentEpisode || !selectedSeries) return null;
+    const episodes = getEpisodes(selectedSeries.id);
+    const currentIndex = episodes.findIndex(ep => ep.id === currentEpisode.id);
+    return currentIndex > 0 ? episodes[currentIndex - 1] : null;
+  };
+
+  const handleProgressUpdate = (time: number, duration: number) => {
+    if (selectedSeries && currentEpisode) {
+      const progress = Math.round((time / duration) * 100);
+      setCurrentTime(time);
+      updateWatchProgress(selectedSeries.id, currentEpisode.number, currentEpisode.season, progress);
+    }
   };
 
   const getRecommendedSeries = () => {
@@ -405,9 +476,9 @@ const Index = () => {
                           className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
                           onClick={() => {
                             const watchedEpisode = userProfile.watchHistory.find(h => h.seriesId === show.id);
-                            const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber + 1 : 1;
+                            const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber : 1;
                             const season = watchedEpisode ? watchedEpisode.seasonNumber : 1;
-                            updateWatchProgress(show.id, nextEpisode, season, Math.floor(Math.random() * 100));
+                            playEpisode(show.id, nextEpisode, season);
                           }}
                         >
                           <Icon name="Play" size={16} className="mr-2" />
@@ -714,8 +785,35 @@ const Index = () => {
                 
                 <Separator />
                 
+                <div className="space-y-3">
+                  <h4 className="font-semibold mb-2">Эпизоды</h4>
+                  <div className="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto">
+                    {getEpisodes(selectedSeries.id).slice(0, 6).map(episode => (
+                      <Button 
+                        key={episode.id}
+                        variant="outline" 
+                        className="justify-start text-left h-auto p-3"
+                        onClick={() => playEpisode(selectedSeries.id, episode.number, episode.season)}
+                      >
+                        <div>
+                          <div className="font-medium">С{episode.season}Э{episode.number}</div>
+                          <div className="text-sm text-gray-600 truncate">{episode.title}</div>
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                
                 <div className="flex gap-2">
-                  <Button className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                  <Button 
+                    className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90"
+                    onClick={() => {
+                      const watchedEpisode = userProfile.watchHistory.find(h => h.seriesId === selectedSeries.id);
+                      const nextEpisode = watchedEpisode ? watchedEpisode.episodeNumber : 1;
+                      const season = watchedEpisode ? watchedEpisode.seasonNumber : 1;
+                      playEpisode(selectedSeries.id, nextEpisode, season);
+                    }}
+                  >
                     <Icon name="Play" size={16} className="mr-2" />
                     Смотреть
                   </Button>
@@ -845,6 +943,211 @@ const Index = () => {
                 Выйти
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Video Player */}
+      <Dialog open={showPlayer} onOpenChange={setShowPlayer}>
+        <DialogContent className="max-w-7xl max-h-[95vh] p-0 bg-black">
+          <div className="relative w-full h-full min-h-[500px] bg-black rounded-lg overflow-hidden">
+            {currentEpisode && selectedSeries && (
+              <>
+                {/* Video Player Header */}
+                <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/80 to-transparent p-4">
+                  <div className="flex items-center justify-between text-white">
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setShowPlayer(false)}
+                        className="text-white hover:bg-white/20"
+                      >
+                        <Icon name="X" size={20} />
+                      </Button>
+                      <div>
+                        <h3 className="font-bold text-lg">{selectedSeries.title}</h3>
+                        <p className="text-sm text-gray-300">
+                          Сезон {currentEpisode.season} • {currentEpisode.title}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => setIsFullscreen(!isFullscreen)}
+                        className="text-white hover:bg-white/20"
+                      >
+                        <Icon name={isFullscreen ? "Minimize" : "Maximize"} size={18} />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Area */}
+                <div className="relative w-full h-full flex items-center justify-center bg-black">
+                  <iframe
+                    src={currentEpisode.videoUrl}
+                    className="w-full h-full"
+                    allowFullScreen
+                    title={currentEpisode.title}
+                  />
+                </div>
+
+                {/* Video Player Controls */}
+                <div className="absolute bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/90 to-transparent p-4">
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex items-center gap-2 text-white text-sm mb-2">
+                      <span>{Math.floor(currentTime / 60)}:{(currentTime % 60).toString().padStart(2, '0')}</span>
+                      <span>/</span>
+                      <span>{currentEpisode.duration}</span>
+                    </div>
+                    <Progress 
+                      value={(currentTime / 2700) * 100} 
+                      className="h-2 bg-white/20"
+                      onChange={(value) => setCurrentTime((value[0] / 100) * 2700)}
+                    />
+                  </div>
+
+                  {/* Control Buttons */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          const prev = getPreviousEpisode();
+                          if (prev && selectedSeries) {
+                            setCurrentEpisode(prev);
+                            setCurrentTime(0);
+                          }
+                        }}
+                        disabled={!getPreviousEpisode()}
+                        className="text-white hover:bg-white/20 disabled:opacity-50"
+                      >
+                        <Icon name="SkipBack" size={20} />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="lg"
+                        onClick={() => setIsPlaying(!isPlaying)}
+                        className="text-white hover:bg-white/20"
+                      >
+                        <Icon name={isPlaying ? "Pause" : "Play"} size={24} />
+                      </Button>
+                      
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={() => {
+                          const next = getNextEpisode();
+                          if (next && selectedSeries) {
+                            setCurrentEpisode(next);
+                            setCurrentTime(0);
+                            updateWatchProgress(selectedSeries.id, next.number, next.season, 0);
+                          }
+                        }}
+                        disabled={!getNextEpisode()}
+                        className="text-white hover:bg-white/20 disabled:opacity-50"
+                      >
+                        <Icon name="SkipForward" size={20} />
+                      </Button>
+
+                      <div className="flex items-center gap-2 ml-4">
+                        <Icon name="Volume2" size={18} className="text-white" />
+                        <div className="w-20">
+                          <input
+                            type="range"
+                            min="0"
+                            max="1"
+                            step="0.1"
+                            value={volume}
+                            onChange={(e) => setVolume(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-primary/80 text-white">
+                        {currentEpisode.season}x{currentEpisode.number.toString().padStart(2, '0')}
+                      </Badge>
+                      
+                      {getNextEpisode() && (
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => {
+                            const next = getNextEpisode();
+                            if (next && selectedSeries) {
+                              setCurrentEpisode(next);
+                              setCurrentTime(0);
+                              updateWatchProgress(selectedSeries.id, next.number, next.season, 0);
+                            }
+                          }}
+                          className="text-white border-white/30 hover:bg-white/20"
+                        >
+                          <Icon name="SkipForward" size={14} className="mr-2" />
+                          Следующий эпизод
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Episode List Sidebar */}
+                <div className="absolute top-16 right-4 w-80 bg-black/80 backdrop-blur-md rounded-lg p-4 max-h-96 overflow-y-auto">
+                  <h4 className="text-white font-semibold mb-3 flex items-center">
+                    <Icon name="List" size={16} className="mr-2" />
+                    Эпизоды сезона {currentEpisode.season}
+                  </h4>
+                  <div className="space-y-2">
+                    {getEpisodes(selectedSeries.id)
+                      .filter(ep => ep.season === currentEpisode.season)
+                      .map(episode => {
+                        const isWatched = userProfile.watchHistory.some(
+                          h => h.seriesId === selectedSeries.id && 
+                               h.episodeNumber === episode.number && 
+                               h.seasonNumber === episode.season &&
+                               h.progress > 80
+                        );
+                        const isCurrent = episode.id === currentEpisode.id;
+                        
+                        return (
+                          <Button 
+                            key={episode.id}
+                            variant="ghost"
+                            className={`w-full justify-start text-left p-3 h-auto ${
+                              isCurrent ? 'bg-primary/30 text-white' : 'text-gray-300 hover:bg-white/10'
+                            }`}
+                            onClick={() => {
+                              setCurrentEpisode(episode);
+                              setCurrentTime(0);
+                              updateWatchProgress(selectedSeries.id, episode.number, episode.season, 0);
+                            }}
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <div className="flex-shrink-0">
+                                {isWatched && <Icon name="Check" size={16} className="text-green-400" />}
+                                {isCurrent && <Icon name="Play" size={16} className="text-primary" />}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">Эпизод {episode.number}</div>
+                                <div className="text-xs text-gray-400 truncate">{episode.title}</div>
+                                <div className="text-xs text-gray-500">{episode.duration}</div>
+                              </div>
+                            </div>
+                          </Button>
+                        );
+                      })}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>
