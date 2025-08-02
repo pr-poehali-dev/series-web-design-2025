@@ -1,3 +1,35 @@
+User-agent: *
+Allow: /
+
+User-agent: Yandex
+Allow: /
+Crawl-delay: 1
+
+User-agent: YandexBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: YandexImages
+Allow: /
+
+User-agent: YandexVideo
+Allow: /
+
+User-agent: YandexMedia
+Allow: /
+
+User-agent: YandexBlogs
+Allow: /
+
+User-agent: YandexNews
+Allow: /
+
+User-agent: YandexAdNet
+Disallow: /
+
+User-agent: YandexWebmaster
+Allow: /
+
 User-agent: Googlebot
 Allow: /
 
@@ -10,5 +42,21 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
-User-agent: *
-Allow: /
+# Disallow admin and private pages
+Disallow: /admin/
+Disallow: /private/
+Disallow: /api/
+Disallow: /auth/
+
+# Allow access to important pages
+Allow: /series/
+Allow: /genres/
+Allow: /search/
+Allow: /top/
+Allow: /new/
+
+# Sitemap location
+Sitemap: https://serialmaster.ru/sitemap.xml
+
+# Additional directives for Yandex
+Host: serialmaster.ru

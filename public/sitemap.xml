@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
+        xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+        
+  <!-- Главная страница -->
+  <url>
+    <loc>https://serialmaster.ru/</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+    <image:image>
+      <image:loc>https://serialmaster.ru/img/b01edc87-748b-4375-9db2-3c9aed9a116e.jpg</image:loc>
+      <image:title>Корпоративные интриги - лучший сериал 2024</image:title>
+      <image:caption>Захватывающая драма о борьбе за власть в крупной корпорации</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Страница сериалов -->
+  <url>
+    <loc>https://serialmaster.ru/series/</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Жанры -->
+  <url>
+    <loc>https://serialmaster.ru/genres/drama</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://serialmaster.ru/genres/comedy</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://serialmaster.ru/genres/sci-fi</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Топ сериалов -->
+  <url>
+    <loc>https://serialmaster.ru/top/</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Новинки -->
+  <url>
+    <loc>https://serialmaster.ru/new/</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Отдельные сериалы -->
+  <url>
+    <loc>https://serialmaster.ru/series/corporate-intrigues</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://serialmaster.ru/img/b01edc87-748b-4375-9db2-3c9aed9a116e.jpg</image:loc>
+      <image:title>Корпоративные интриги</image:title>
+      <image:caption>Захватывающая история о борьбе за власть в крупной корпорации</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://serialmaster.ru/series/future-is-here</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://serialmaster.ru/img/45bf9afd-0481-4faf-84a7-55df73fc26bc.jpg</image:loc>
+      <image:title>Будущее уже здесь</image:title>
+      <image:caption>Киберпанк-триллер о мире будущего и технологических революциях</image:caption>
+    </image:image>
+  </url>
+
+  <url>
+    <loc>https://serialmaster.ru/series/family-happiness</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://serialmaster.ru/img/cbe34d83-b1e3-44cd-a9a2-f908697f7844.jpg</image:loc>
+      <image:title>Семейное счастье</image:title>
+      <image:caption>Добрая семейная комедия о повседневной жизни обычной семьи</image:caption>
+    </image:image>
+  </url>
+
+  <!-- Поиск -->
+  <url>
+    <loc>https://serialmaster.ru/search/</loc>
+    <lastmod>2024-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>

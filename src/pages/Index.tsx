@@ -259,9 +259,11 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50" itemScope itemType="https://schema.org/WebSite">
+      <meta itemProp="name" content="СериалМастер" />
+      <meta itemProp="url" content="https://serialmaster.ru/" />
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-white/20 shadow-lg">
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 border-b border-white/20 shadow-lg" role="banner">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -273,7 +275,7 @@ const Index = () => {
               </h1>
             </div>
             
-            <nav className="hidden md:flex gap-6">
+            <nav className="hidden md:flex gap-6" role="navigation" aria-label="Основная навигация">
               <Button variant="ghost" className="hover:bg-primary/10">Главная</Button>
               <Button variant="ghost" className="hover:bg-primary/10">Сериалы</Button>
               <Button variant="ghost" className="hover:bg-primary/10">Жанры</Button>
@@ -285,10 +287,12 @@ const Index = () => {
               <div className="relative">
                 <Icon name="Search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                 <Input
-                  placeholder="Поиск сериалов..."
+                  placeholder="Поиск сериалов по названию, жанру, режиссёру..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-64 bg-white/50 backdrop-blur-sm border-white/30"
+                  aria-label="Поиск по каталогу сериалов"
+                  role="searchbox"
                 />
               </div>
               <Dialog>
@@ -304,12 +308,12 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
+      <section className="relative overflow-hidden py-20 px-4" itemScope itemType="https://schema.org/WebPageElement">
         <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20 animate-float"></div>
         <div className="container mx-auto text-center relative z-10">
-          <h2 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in">
-            Лучшие сериалы 2024
-          </h2>
+          <h1 className="text-6xl font-bold mb-6 bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent animate-fade-in" itemProp="headline">
+            Лучшие сериалы 2024 года — рейтинги и отзывы
+          </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto animate-fade-in">
             Откройте для себя самые популярные и высоко оцененные сериалы года. 
             Читайте отзывы, ставьте оценки и находите новые любимые шоу.
@@ -346,7 +350,9 @@ const Index = () => {
       </section>
 
       {/* Main Content */}
-      <main className="py-8 px-4">
+      <main className="py-8 px-4" role="main" itemScope itemType="https://schema.org/ItemList">
+        <meta itemProp="name" content="Каталог сериалов" />
+        <meta itemProp="description" content="Полный каталог лучших сериалов с рейтингами и отзывами пользователей" />
         <div className="container mx-auto">
           <Tabs defaultValue="all" className="w-full">
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-4 mb-8 bg-white/50 backdrop-blur-sm">
@@ -401,13 +407,20 @@ const Index = () => {
                 </div>
               )}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredSeries.map(show => (
-                  <Card key={show.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/70 backdrop-blur-sm border-white/30 overflow-hidden hover:scale-105">
+                {filteredSeries.map((show, index) => (
+                  <Card key={show.id} className="group hover:shadow-2xl transition-all duration-300 bg-white/70 backdrop-blur-sm border-white/30 overflow-hidden hover:scale-105" itemScope itemType="https://schema.org/Movie">
+                    <meta itemProp="position" content={String(index + 1)} />
+                    <meta itemProp="name" content={show.title} />
+                    <meta itemProp="description" content={show.description} />
+                    <meta itemProp="genre" content={show.genre} />
+                    <meta itemProp="dateCreated" content={String(show.year)} />
                     <div className="relative">
                       <img 
                         src={show.image} 
-                        alt={show.title}
+                        alt={`Постер сериала "${show.title}" (${show.year}) - ${show.genre.toLowerCase()}, рейтинг ${show.rating} звёзд`}
                         className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                        itemProp="image"
+                        loading="lazy"
                       />
                       <div className="absolute top-4 left-4 flex gap-2">
                         {show.isNew && (
@@ -439,7 +452,7 @@ const Index = () => {
                     
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-bold text-gray-800">{show.title}</h3>
+                        <h3 className="text-xl font-bold text-gray-800" itemProp="headline">{show.title}</h3>
                         <Badge variant="secondary" className="bg-gradient-to-r from-primary/10 to-secondary/10">
                           {show.year}
                         </Badge>
@@ -455,7 +468,7 @@ const Index = () => {
                         {show.genre}
                       </Badge>
                       
-                      <p className="text-gray-600 mb-4 line-clamp-2">{show.description}</p>
+                      <p className="text-gray-600 mb-4 line-clamp-2" itemProp="description">{show.description}</p>
                       
                       {/* Watch Progress */}
                       {(() => {
@@ -524,8 +537,10 @@ const Index = () => {
                     <div className="relative">
                       <img 
                         src={show.image} 
-                        alt={show.title}
+                        alt={`Постер сериала "${show.title}" (${show.year}) - ${show.genre.toLowerCase()}, рейтинг ${show.rating} звёзд`}
                         className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                        itemProp="image"
+                        loading="lazy"
                       />
                       <Badge className="absolute top-4 left-4 bg-gradient-to-r from-red-400 to-pink-500 text-white">
                         <Icon name="TrendingUp" size={14} className="mr-1" />
@@ -564,8 +579,10 @@ const Index = () => {
                     <div className="relative">
                       <img 
                         src={show.image} 
-                        alt={show.title}
+                        alt={`Постер сериала "${show.title}" (${show.year}) - ${show.genre.toLowerCase()}, рейтинг ${show.rating} звёзд`}
                         className="w-full h-64 object-cover group-hover:scale-110 transition-transform duration-300"
+                        itemProp="image"
+                        loading="lazy"
                       />
                       <Badge className="absolute top-4 left-4 bg-gradient-to-r from-green-400 to-emerald-500 text-white">
                         <Icon name="Sparkles" size={14} className="mr-1" />
@@ -649,7 +666,7 @@ const Index = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 px-4 mt-16">
+      <footer className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-12 px-4 mt-16" role="contentinfo" itemScope itemType="https://schema.org/WPFooter">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
