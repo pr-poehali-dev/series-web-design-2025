@@ -4,6 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
 import Icon from '@/components/ui/icon';
 
 interface Series {
@@ -17,6 +21,13 @@ interface Series {
   reviews: Review[];
   isNew?: boolean;
   isTrending?: boolean;
+  duration?: string;
+  episodes?: number;
+  seasons?: number;
+  cast?: string[];
+  director?: string;
+  trailerUrl?: string;
+  fullDescription?: string;
 }
 
 interface Review {
@@ -27,10 +38,38 @@ interface Review {
   date: string;
 }
 
+interface WatchHistory {
+  seriesId: number;
+  episodeNumber: number;
+  seasonNumber: number;
+  watchedAt: string;
+  progress: number;
+}
+
+interface UserProfile {
+  name: string;
+  email: string;
+  avatar?: string;
+  watchHistory: WatchHistory[];
+  preferences: string[];
+}
+
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState('Все');
   const [favorites, setFavorites] = useState<number[]>([]);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: 'Анна Петрова',
+    email: 'anna@example.com',
+    watchHistory: [
+      { seriesId: 1, episodeNumber: 3, seasonNumber: 1, watchedAt: '2024-07-20', progress: 45 },
+      { seriesId: 2, episodeNumber: 1, seasonNumber: 1, watchedAt: '2024-07-19', progress: 100 },
+      { seriesId: 3, episodeNumber: 5, seasonNumber: 2, watchedAt: '2024-07-18', progress: 78 }
+    ],
+    preferences: ['Драма', 'Фантастика']
+  });
 
   const genres = ['Все', 'Драма', 'Комедия', 'Фантастика', 'Триллер', 'Детектив', 'Романтика'];
 
@@ -43,6 +82,13 @@ const Index = () => {
       year: 2024,
       image: "/img/b01edc87-748b-4375-9db2-3c9aed9a116e.jpg",
       description: "Захватывающая история о борьбе за власть в крупной корпорации",
+      fullDescription: "Увлекательный сериал о жестоком мире корпоративной Америки, где каждый день - это битва за выживание. Главные герои сталкиваются с моральными дилеммами, предательством и сложными человеческими отношениями в стремлении достичь вершины карьерной лестницы.",
+      duration: "60 мин",
+      episodes: 12,
+      seasons: 3,
+      cast: ["Майкл Дуглас", "Сара Джессика Паркер", "Кевин Спейси"],
+      director: "Дэвид Финчер",
+      trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       isNew: true,
       isTrending: true,
       reviews: [
@@ -58,6 +104,13 @@ const Index = () => {
       year: 2024,
       image: "/img/45bf9afd-0481-4faf-84a7-55df73fc26bc.jpg",
       description: "Киберпанк-триллер о мире будущего и технологических революциях",
+      fullDescription: "В недалеком будущем, где технологии полностью изменили человеческую цивилизацию, группа хакеров борется против корпоративной диктатуры. Сериал исследует темы искусственного интеллекта, виртуальной реальности и того, что значит быть человеком в цифровую эпоху.",
+      duration: "45 мин",
+      episodes: 10,
+      seasons: 2,
+      cast: ["Райан Гослинг", "Скарлетт Йоханссон", "Оскар Айзек"],
+      director: "Дени Вильнёв",
+      trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       isNew: true,
       reviews: [
         { id: 3, author: "Елена В.", rating: 5, text: "Потрясающие спецэффекты и глубокий сюжет!", date: "2024-07-20" },
@@ -72,6 +125,13 @@ const Index = () => {
       year: 2023,
       image: "/img/cbe34d83-b1e3-44cd-a9a2-f908697f7844.jpg",
       description: "Добрая семейная комедия о повседневной жизни обычной семьи",
+      fullDescription: "Теплая и добрая комедия о современной семье, которая сталкивается с повседневными проблемами и радостями. Сериал показывает, как важны семейные ценности, любовь и взаимопонимание в нашем быстро меняющемся мире.",
+      duration: "30 мин",
+      episodes: 24,
+      seasons: 4,
+      cast: ["Сергей Безруков", "Елена Яковлева", "Андрей Мерзликин"],
+      director: "Александр Баранов",
+      trailerUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
       isTrending: true,
       reviews: [
         { id: 5, author: "Ольга С.", rating: 4, text: "Очень добрый и теплый сериал, смотрим всей семьей.", date: "2024-07-12" },
@@ -141,9 +201,13 @@ const Index = () => {
                   className="pl-10 w-64 bg-white/50 backdrop-blur-sm border-white/30"
                 />
               </div>
-              <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
-                <Icon name="User" size={18} />
-              </Button>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90" onClick={() => setShowProfile(true)}>
+                    <Icon name="User" size={18} />
+                  </Button>
+                </DialogTrigger>
+              </Dialog>
             </div>
           </div>
         </div>
@@ -265,9 +329,13 @@ const Index = () => {
                           <Icon name="Play" size={16} className="mr-2" />
                           Смотреть
                         </Button>
-                        <Button variant="outline" size="sm" className="hover:bg-primary/10">
-                          <Icon name="Info" size={16} />
-                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="hover:bg-primary/10" onClick={() => setSelectedSeries(show)}>
+                              <Icon name="Info" size={16} />
+                            </Button>
+                          </DialogTrigger>
+                        </Dialog>
                       </div>
                       
                       {/* Reviews Preview */}
@@ -464,6 +532,222 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      {/* Series Detail Modal */}
+      {selectedSeries && (
+        <Dialog open={!!selectedSeries} onOpenChange={() => setSelectedSeries(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold mb-4">{selectedSeries.title}</DialogTitle>
+            </DialogHeader>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <img 
+                  src={selectedSeries.image} 
+                  alt={selectedSeries.title}
+                  className="w-full h-64 object-cover rounded-lg"
+                />
+                
+                {selectedSeries.trailerUrl && (
+                  <div className="space-y-2">
+                    <h4 className="font-semibold flex items-center">
+                      <Icon name="Play" size={16} className="mr-2" />
+                      Трейлер
+                    </h4>
+                    <div className="aspect-video rounded-lg overflow-hidden">
+                      <iframe
+                        src={selectedSeries.trailerUrl}
+                        className="w-full h-full"
+                        allowFullScreen
+                        title={`Трейлер ${selectedSeries.title}`}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    {renderStars(selectedSeries.rating)}
+                    <span className="text-lg font-semibold text-yellow-600">{selectedSeries.rating}</span>
+                  </div>
+                  <Badge className="bg-gradient-to-r from-secondary/20 to-accent/20">
+                    {selectedSeries.genre}
+                  </Badge>
+                  <Badge variant="secondary">{selectedSeries.year}</Badge>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="font-medium text-gray-600">Продолжительность:</span>
+                    <p>{selectedSeries.duration}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Сезонов:</span>
+                    <p>{selectedSeries.seasons}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Эпизодов:</span>
+                    <p>{selectedSeries.episodes}</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">Режиссер:</span>
+                    <p>{selectedSeries.director}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Описание</h4>
+                  <p className="text-gray-600 leading-relaxed">{selectedSeries.fullDescription}</p>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">В ролях</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedSeries.cast?.map((actor, index) => (
+                      <Badge key={index} variant="outline">{actor}</Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="flex gap-2">
+                  <Button className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                    <Icon name="Play" size={16} className="mr-2" />
+                    Смотреть
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => toggleFavorite(selectedSeries.id)}
+                    className={favorites.includes(selectedSeries.id) ? 'text-red-500 border-red-200' : ''}
+                  >
+                    <Icon 
+                      name="Heart" 
+                      size={16} 
+                      className={favorites.includes(selectedSeries.id) ? 'fill-current' : ''}
+                    />
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <Separator className="my-6" />
+            
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Icon name="MessageCircle" size={16} className="mr-2" />
+                Отзывы зрителей ({selectedSeries.reviews.length})
+              </h4>
+              <div className="space-y-4 max-h-64 overflow-y-auto">
+                {selectedSeries.reviews.map(review => (
+                  <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarFallback>{review.author.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{review.author}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {renderStars(review.rating)}
+                        <span className="text-sm text-gray-500">{review.date}</span>
+                      </div>
+                    </div>
+                    <p className="text-gray-600">{review.text}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* User Profile Modal */}
+      <Dialog open={showProfile} onOpenChange={setShowProfile}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">Личный кабинет</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            <div className="flex items-center gap-4">
+              <Avatar className="w-16 h-16">
+                <AvatarFallback className="text-lg">{userProfile.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="text-xl font-semibold">{userProfile.name}</h3>
+                <p className="text-gray-600">{userProfile.email}</p>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Icon name="Clock" size={16} className="mr-2" />
+                История просмотров
+              </h4>
+              <div className="space-y-3">
+                {userProfile.watchHistory.map((item, index) => {
+                  const seriesData = series.find(s => s.id === item.seriesId);
+                  return (
+                    <div key={index} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                      <img 
+                        src={seriesData?.image} 
+                        alt={seriesData?.title}
+                        className="w-16 h-12 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <h5 className="font-medium">{seriesData?.title}</h5>
+                        <p className="text-sm text-gray-600">
+                          Сезон {item.seasonNumber}, Эпизод {item.episodeNumber}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Progress value={item.progress} className="flex-1 h-2" />
+                          <span className="text-xs text-gray-500">{item.progress}%</span>
+                        </div>
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item.watchedAt}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h4 className="font-semibold mb-4 flex items-center">
+                <Icon name="Settings" size={16} className="mr-2" />
+                Предпочтения
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {userProfile.preferences.map((pref, index) => (
+                  <Badge key={index} className="bg-gradient-to-r from-primary/20 to-secondary/20">
+                    {pref}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button className="flex-1 bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90">
+                <Icon name="Edit" size={16} className="mr-2" />
+                Редактировать профиль
+              </Button>
+              <Button variant="outline">
+                <Icon name="LogOut" size={16} className="mr-2" />
+                Выйти
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
